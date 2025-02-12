@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        .container {
+            width: 300px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #e2e2e2;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Admin Panel</h2>
+
+    <h3>Create Doctor</h3>
+    <form id="createDoctorForm">
+        <input type="email" id="doctorEmail" placeholder="Doctor Email" required>
+        <input type="password" id="doctorPassword" placeholder="Password" required>
+        <button type="submit">Create Doctor</button>
+    </form>
+
+    <h3>All Users</h3>
+    <button id="fetchUsersBtn">Fetch Users</button>
+    <ul id="userList"></ul>
+</div>
+<script>
+    fetchUsersBtn.addEventListener("click", async () => {
+        const adminToken = localStorage.getItem("token");
+
+        if (!adminToken) {
+            alert("No admin token found! Please log in again.");
+            window.location.href = "/login";
+            return;
+        }
+
+        const response = await fetch("http://localhost:9000/admin/", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${adminToken}`
+            }
+        });
+        console.log("Stored Token:", adminToken);
+
+
+        if (!response.ok) {
+            alert("Unauthorized! Please log in again.");
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+            return;
+        }
+
+        const data = await response.json();
+        console.log(data);
+    });
+
+</script>
+
+</body>
+</html>

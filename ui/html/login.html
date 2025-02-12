@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -104,23 +106,35 @@
   <button type="submit">Login</button>
 </form>
 <script>
-  document.getElementById("loginForm").addEventListener("submit", async function(event) {
-  event.preventDefault();
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
 
-  const loginData = {
-    email: document.getElementById("loginEmail").value,
-    password: document.getElementById("loginPassword").value
-  };
+        const loginData = {
+            email: document.getElementById("loginEmail").value,
+            password: document.getElementById("loginPassword").value
+        };
 
-  const response = await fetch("http://localhost:9000/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(loginData)
-  });
+        const response = await fetch("http://localhost:9000/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(loginData)
+        });
 
-  const result = await response.json();
-  alert(result.message);
-});
+        const result = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem("token", result.token);
+
+            if (result.isAdmin) {
+                window.location.href = "/admin";
+            } else {
+                window.location.href = "/home";
+            }
+        } else {
+            alert(result.message || "Login failed");
+        }
+    });
+
 
 </script>
 </body>

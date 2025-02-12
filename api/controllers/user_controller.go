@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"github.com/AskatNa/OnlineClinic/api/models"
 	"net/http"
 	"time"
@@ -21,12 +22,37 @@ func SetUserCollection(collection *mongo.Collection) {
 func CreateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	isAdminValue, exists := c.Get("isAdmin")
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Authorization error: Admin status not found"})
+		return
+	}
 
+	isAdmin, ok := isAdminValue.(bool)
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Authorization error: Invalid admin status"})
+		return
+	}
+
+	fmt.Println("🛠 isAdmin exists:", exists)
+	fmt.Println("🔍 Extracted isAdmin value:", isAdmin)
+	if !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only the admin can create users"})
+		return
+	}
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, responses.UserResponse{
 			Status:  http.StatusBadRequest,
 			Message: "Invalid data format",
+		})
+		return
+	}
+
+	if user.Role != "doctor" {
+		c.JSON(http.StatusBadRequest, responses.UserResponse{
+			Status:  http.StatusBadRequest,
+			Message: "Only 'doctor' role can be assigned",
 		})
 		return
 	}
@@ -47,7 +73,7 @@ func CreateUser(c *gin.Context) {
 	})
 }
 
-func GetAUser(c *gin.Context) {
+func GetUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -136,6 +162,12 @@ func UpdateUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	isAdmin, exists := c.Get("isAdmin")
+	if !exists || !isAdmin.(bool) {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only the admin can delete users"})
+		c.Abort()
+		return
+	}
 
 	userId := c.Param("userId")
 	objId, _ := primitive.ObjectIDFromHex(userId)

@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+var AdminEmail = "admin798@gmail.com"
+var AdminPassword = "sequence0"
+var JWTSecret = []byte(os.Getenv("TOKEN_SECRET_KEY"))
+
 func EnvMongoURI() string {
 	err := godotenv.Load()
 	if err != nil {
