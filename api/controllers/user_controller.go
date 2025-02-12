@@ -14,10 +14,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var userCollection *mongo.Collection
+var UserCollection *mongo.Collection
 
 func SetUserCollection(collection *mongo.Collection) {
-	userCollection = collection
+	UserCollection = collection
 }
 func CreateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -57,7 +57,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, err := userCollection.InsertOne(ctx, user)
+	result, err := UserCollection.InsertOne(ctx, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
 			Status:  http.StatusInternalServerError,
@@ -81,7 +81,7 @@ func GetUser(c *gin.Context) {
 	objId, _ := primitive.ObjectIDFromHex(userId)
 
 	var user models.User
-	err := userCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&user)
+	err := UserCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusNotFound, responses.UserResponse{
 			Status:  http.StatusNotFound,
@@ -102,7 +102,7 @@ func GetAllUsers(c *gin.Context) {
 	defer cancel()
 
 	var users []models.User
-	cursor, err := userCollection.Find(ctx, bson.M{})
+	cursor, err := UserCollection.Find(ctx, bson.M{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
 			Status:  http.StatusInternalServerError,
@@ -143,7 +143,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	result, err := userCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": updatedData})
+	result, err := UserCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": updatedData})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
 			Status:  http.StatusInternalServerError,
@@ -172,7 +172,7 @@ func DeleteUser(c *gin.Context) {
 	userId := c.Param("userId")
 	objId, _ := primitive.ObjectIDFromHex(userId)
 
-	result, err := userCollection.DeleteOne(ctx, bson.M{"_id": objId})
+	result, err := UserCollection.DeleteOne(ctx, bson.M{"_id": objId})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
 			Status:  http.StatusInternalServerError,

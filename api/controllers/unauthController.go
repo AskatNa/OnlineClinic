@@ -22,7 +22,6 @@ func Ping(c *gin.Context) {
 	})
 }
 
-// Registration func
 func RegisterUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -36,7 +35,6 @@ func RegisterUser(c *gin.Context) {
 
 	fmt.Println("Received Data:", data)
 
-	// Validate password length
 	if len(data.Password) < 8 {
 		c.JSON(http.StatusBadRequest, responses.UserResponse{
 			Status:  http.StatusBadRequest,
@@ -44,7 +42,6 @@ func RegisterUser(c *gin.Context) {
 		})
 		return
 	}
-	//Email validation
 	if !emailRegex.MatchString(data.Email) {
 		c.JSON(http.StatusBadRequest, responses.UserResponse{
 			Status:  http.StatusBadRequest,
@@ -74,7 +71,6 @@ func RegisterUser(c *gin.Context) {
 		Data:    map[string]interface{}{"id": result.InsertedID}})
 }
 
-// Login func
 func Login(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
