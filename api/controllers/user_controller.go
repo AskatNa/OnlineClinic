@@ -53,7 +53,6 @@ func CreateUser(c *gin.Context) {
 		Data:    map[string]interface{}{"id": insertResult.InsertedID, "role": user.Role},
 	})
 }
-
 func GetUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

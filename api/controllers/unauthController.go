@@ -71,89 +71,6 @@ func RegisterUser(c *gin.Context) {
 		Data:    map[string]interface{}{"id": result.InsertedID, "role": data.Role}})
 }
 
-//func RegisterUser(c *gin.Context) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-//	defer cancel()
-//	var data models.User
-//	if err := c.ShouldBindJSON(&data); err != nil {
-//		c.JSON(http.StatusBadRequest, responses.UserResponse{
-//			Status: http.StatusBadRequest, Message: "Invalid data format",
-//		})
-//		return
-//	}
-//
-//	fmt.Println("Received Data:", data)
-//	if len(data.Password) < 8 {
-//		c.JSON(http.StatusBadRequest, responses.UserResponse{
-//			Status:  http.StatusBadRequest,
-//			Message: "Password must be at least 8 characters long",
-//		})
-//		return
-//	}
-//	if !emailRegex.MatchString(data.Email) {
-//		c.JSON(http.StatusBadRequest, responses.UserResponse{
-//			Status:  http.StatusBadRequest,
-//			Message: "Invalid email format",
-//		})
-//		return
-//	}
-//	var existingUser models.User
-//	err := userCollection.FindOne(ctx, bson.M{"email": data.Email}).Decode(&existingUser)
-//	if err == nil {
-//		c.JSON(http.StatusConflict, responses.UserResponse{
-//			Status:  http.StatusConflict,
-//			Message: "Email already registered",
-//		})
-//		return
-//	}
-//	data.Role = "patient"
-//	result, err := userCollection.InsertOne(ctx, data)
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, responses.UserResponse{Status: http.StatusInternalServerError,
-//			Message: "Error registering user"})
-//		return
-//	}
-//	c.JSON(http.StatusCreated, responses.UserResponse{
-//		Status:  http.StatusCreated,
-//		Message: "User successfully registered",
-//		Data:    map[string]interface{}{"id": result.InsertedID, "role": data.Role}})
-//}
-
-//var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-
-//func Login(c *gin.Context) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-//	defer cancel()
-//	var data map[string]string
-//	if err := c.ShouldBindJSON(&data); err != nil {
-//		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid login data format"})
-//		return
-//	}
-//	var user models.User
-//	err := userCollection.FindOne(ctx, bson.M{"email": data["email"]}).Decode(&user)
-//	if err != nil || user.Password != data["password"] {
-//		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
-//		return
-//	}
-//	expirationTime := time.Now().Add(time.Hour * 24)
-//	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-//		"email": user.Email,
-//		"role":  user.Role,
-//		"exp":   expirationTime.Unix(),
-//	})
-//	tokenString, err := token.SignedString([]byte(configs.JWTSecret))
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error generating token"})
-//		return
-//	}
-//	c.JSON(http.StatusOK, gin.H{
-//		"message":    "Login successful",
-//		"token":      "Bearer " + tokenString,
-//		"expireTime": expirationTime,
-//	})
-//}
-
-// Login func
 func Login(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -163,7 +80,6 @@ func Login(c *gin.Context) {
 			Message: "Invalid login data format"})
 		return
 	}
-	// Validate email
 	if !emailRegex.MatchString(data["email"]) {
 		c.JSON(http.StatusBadRequest, responses.UserResponse{
 			Status:  http.StatusBadRequest,
@@ -176,7 +92,7 @@ func Login(c *gin.Context) {
 		expirationTime := time.Now().Add(24 * time.Hour)
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"email":   configs.AdminEmail,
-			"isAdmin": true, //user.Email == configs.AdminEmail,
+			"isAdmin": true,
 			"exp":     expirationTime.Unix(),
 		})
 		tokenString, err := token.SignedString([]byte(configs.JWTSecret))
@@ -214,7 +130,6 @@ func Login(c *gin.Context) {
 		"isAdmin": user.Role == "admin" || user.Email == configs.AdminEmail,
 		"exp":     expirationTime.Unix(),
 	})
-	//tokenString, err := token.SignedString(configs.JWTSecret)
 	tokenString, err := token.SignedString([]byte(configs.JWTSecret))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
@@ -226,9 +141,8 @@ func Login(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Expose-Headers", "Authorization")
 	c.Writer.Header().Set("Authorization", "Bearer "+tokenString)
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"token":   "Bearer " + tokenString,
-		//"isAdmin":    user.Email == configs.AdminEmail,
+		"message":    "Login successful",
+		"token":      "Bearer " + tokenString,
 		"user":       user,
 		"expireTime": expirationTime,
 	})
