@@ -10,16 +10,28 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             text-align: center;
-            padding-top: 60px; /* Adjust for navbar */
+            padding-top: 60px;
         }
         .container {
-            background-color: white;
+            background-color: yellow;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
             margin: auto;
             margin-top: 20px;
+        }
+        .hero {
+            background: url('clinic.jpg') no-repeat center center/cover;
+            color: black;
+            padding: 100px 20px;
+        }
+        .btn-custom {
+            background-color: #28a745;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -34,22 +46,38 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/">Home</a>
+                    <a class="nav-link active" href="index.html">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/register">Register</a>
+                    <a class="nav-link" href="register.html">Register</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/login">Login</a>
+                    <a class="nav-link" href="login.html">Login</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/contacts">Contacts</a>
+                    <a class="nav-link" href="contacts.html">Contacts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="wallets.html">Wallet</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="appointment.html">Booking</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
 
+<header class="hero">
+    <h1>Welcome to Online Clinic</h1>
+    <p>Fast and convenient appointment with a doctor</p>
+    <a href="register.html" class="btn btn-custom">Sign up</a>
+</header>
+
+<section class="container mt-4">
+    <h2>About Us</h2>
+    <p>Online Clinic is a convenient platform for making appointments with doctors of various specialties. We care about your health, offering modern and high-quality medical services.</p>
+</section>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
