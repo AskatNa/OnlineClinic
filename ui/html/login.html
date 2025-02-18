@@ -101,9 +101,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <form id="loginForm">
-  <input type="email" id="loginEmail" placeholder="Email" required><br>
-  <input type="password" id="loginPassword" placeholder="Password" required><br>
-  <button type="submit">Login</button>
+    <input type="email" id="loginEmail" placeholder="Email" required><br>
+    <input type="password" id="loginPassword" placeholder="Password" required><br>
+    <button type="submit">Login</button>
 </form>
 <script>
     document.getElementById("loginForm").addEventListener("submit", async function(event) {
@@ -114,28 +114,36 @@
             password: document.getElementById("loginPassword").value
         };
 
-        const response = await fetch("http://localhost:9000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(loginData)
-        });
+        try {
+            const response = await fetch("http://localhost:9000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(loginData)
+            });
 
-        const result = await response.json();
+            const result = await response.json();
+            console.log("Login Response:", result);
 
-        if (response.ok) {
-            localStorage.setItem("token", result.token);
-
-            if (result.isAdmin) {
-                window.location.href = "/admin";
+            if (result.token) {
+                // Store only the raw token, without "Bearer "
+                localStorage.setItem("token", result.token.replace("Bearer ", ""));
+                console.log("Stored Token:", localStorage.getItem("token"));if (result.user && result.user.role === "doctor") {
+                    console.log("Redirecting to Doctor Profile");
+                    window.location.href = "/doctorProfile.html";
+                } else if (result.isAdmin) {
+                    console.log("Redirecting to Admin Panel");
+                    window.location.href = "/admin/";
+                } else {
+                    console.log("Redirecting to Home Page");
+                    window.location.href = "/";
+                }
             } else {
-                window.location.href = "/home";
+                alert(result.message);
             }
-        } else {
-            alert(result.message || "Login failed");
+        } catch (error) {
+            console.error("Error during login:", error);
+            alert("Login request failed. Check your network connection.");
         }
-    });
-
-
-</script>
+    });</script>
 </body>
 </html>
