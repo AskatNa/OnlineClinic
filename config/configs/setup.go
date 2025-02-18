@@ -13,18 +13,20 @@ import (
 func ConnectDB() *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoURI()))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error creating MongoDB client:", err)
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error connecting to MongoDB:", err)
 	}
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error pinging MongoDB:", err)
 	}
 	fmt.Println("Connected to MongoDB")
 	return client
@@ -33,6 +35,6 @@ func ConnectDB() *mongo.Client {
 var DB *mongo.Client = ConnectDB()
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database("onlineClinic").Collection(collectionName)
+	collection := client.Database("online_clinic").Collection(collectionName)
 	return collection
 }

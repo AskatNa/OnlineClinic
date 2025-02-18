@@ -11,54 +11,64 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Authorization token required"})
-			c.Abort()
-			return
-		}
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == "" || tokenString == authHeader {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token format"})
-			c.Abort()
-			return
-		}
+		fmt.Println("Received Headers:", c.Request.Header)
 
-		fmt.Println("🔍 Received Token:", tokenString)
+		authHeader := c.GetHeader("Authorization")
+		fmt.Println("Authorization Header:", c.GetHeader("Authorization"))
+
+		fmt.Println("Extracted Authorization Header:", authHeader)
+
+		fmt.Println("JWT Secret Key:", configs.JWTSecret)
+
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			fmt.Println("No valid token found")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - No Token"})
+			c.Abort()
+			return
+		}
+		fmt.Println("Token Found:", authHeader)
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		fmt.Println("Extracted Token:", tokenString)
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return []byte(configs.JWTSecret), nil
 		})
+		fmt.Println("JWT Secret Key:", configs.JWTSecret)
+
 		if err != nil || !token.Valid {
+			fmt.Println("JWT Error:", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
+
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token claims"})
 			c.Abort()
 			return
 		}
+
 		userEmail, ok := claims["email"].(string)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Email missing in token"})
 			c.Abort()
 			return
 		}
-
 		fmt.Println("Extracted Email:", userEmail)
-		fmt.Println("Expected Admin Email:", configs.AdminEmail)
+		fmt.Println("Extracted Token:", tokenString)
+		fmt.Println("Claims:", claims)
+
+		isAdmin := false
+		if adminFlag, exists := claims["isAdmin"].(bool); exists && adminFlag {
+			isAdmin = true
+		}
+		fmt.Println("Is Admin:", isAdmin)
 
 		c.Set("email", userEmail)
-
-		if userEmail == configs.AdminEmail {
-			fmt.Println("Admin detected!")
-			c.Set("isAdmin", true)
-		} else {
-			fmt.Println("Not an admin")
-			c.Set("isAdmin", false)
-		}
+		c.Set("isAdmin", isAdmin)
+		fmt.Println("Middleware - Extracted Email:", claims["email"], "Is Admin:", claims["isAdmin"])
 
 		c.Next()
 	}

@@ -19,57 +19,38 @@ var userCollection *mongo.Collection
 func SetUserCollection(collection *mongo.Collection) {
 	userCollection = collection
 }
+
 func CreateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	isAdminValue, exists := c.Get("isAdmin")
-	if !exists {
-		c.JSON(http.StatusForbidden, gin.H{"message": "Authorization error: Admin status not found"})
-		return
-	}
 
-	isAdmin, ok := isAdminValue.(bool)
-	if !ok {
-		c.JSON(http.StatusForbidden, gin.H{"message": "Authorization error: Invalid admin status"})
-		return
-	}
-
-	fmt.Println("🛠 isAdmin exists:", exists)
-	fmt.Println("🔍 Extracted isAdmin value:", isAdmin)
-	if !isAdmin {
+	isAdmin, exists := c.Get("isAdmin")
+	if !exists || !isAdmin.(bool) {
 		c.JSON(http.StatusForbidden, gin.H{"message": "Only the admin can create users"})
 		return
 	}
+
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, responses.UserResponse{
-			Status:  http.StatusBadRequest,
-			Message: "Invalid data format",
-		})
+		c.JSON(http.StatusBadRequest, responses.UserResponse{Status: http.StatusBadRequest, Message: "Invalid data format"})
 		return
 	}
 
-	if user.Role != "doctor" {
-		c.JSON(http.StatusBadRequest, responses.UserResponse{
-			Status:  http.StatusBadRequest,
-			Message: "Only 'doctor' role can be assigned",
-		})
+	if user.Role != "doctor" && user.Role != "patient" {
+		c.JSON(http.StatusBadRequest, responses.UserResponse{Status: http.StatusBadRequest, Message: "Invalid role. Allowed roles: 'doctor', 'patient'"})
 		return
 	}
 
-	result, err := userCollection.InsertOne(ctx, user)
+	insertResult, err := userCollection.InsertOne(ctx, user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, responses.UserResponse{
-			Status:  http.StatusInternalServerError,
-			Message: "Error creating user",
-		})
+		c.JSON(http.StatusInternalServerError, responses.UserResponse{Status: http.StatusInternalServerError, Message: "Error creating user"})
 		return
 	}
 
 	c.JSON(http.StatusCreated, responses.UserResponse{
 		Status:  http.StatusCreated,
 		Message: "User successfully created",
-		Data:    map[string]interface{}{"id": result.InsertedID},
+		Data:    map[string]interface{}{"id": insertResult.InsertedID, "role": user.Role},
 	})
 }
 
@@ -126,64 +107,115 @@ func GetAllUsers(c *gin.Context) {
 		Data:    map[string]interface{}{"users": users},
 	})
 }
-
 func UpdateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	userId := c.Param("userId")
-	objId, _ := primitive.ObjectIDFromHex(userId)
-
-	var updatedData models.User
-	if err := c.ShouldBindJSON(&updatedData); err != nil {
-		c.JSON(http.StatusBadRequest, responses.UserResponse{
-			Status:  http.StatusBadRequest,
-			Message: "Invalid data format",
-		})
-		return
-	}
-
-	result, err := userCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": updatedData})
+	objId, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, responses.UserResponse{
-			Status:  http.StatusInternalServerError,
-			Message: "Error updating user",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
+		return
+	}
+	isAdminInterface, exists := c.Get("isAdmin")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, responses.UserResponse{
-		Status:  http.StatusOK,
-		Message: "User updated successfully",
-		Data:    map[string]interface{}{"matchedCount": result.MatchedCount},
-	})
+	isAdmin, ok := isAdminInterface.(bool)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid admin status"})
+		c.Abort()
+		return
+	}
+	currentUserEmail, _ := c.Get("email")
+
+	if !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only admins can update users"})
+		return
+	}
+
+	// Log to debug admin status
+	fmt.Println("Admin Status:", isAdmin)
+	fmt.Println("Current User Email:", currentUserEmail)
+
+	var user models.User
+	if err := userCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&user); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	if user.Email == currentUserEmail {
+		c.JSON(http.StatusForbidden, gin.H{"message": "You cannot change your own role"})
+		return
+	}
+
+	var updatedData struct {
+		Role string `json:"role"`
+	}
+	if err := c.ShouldBindJSON(&updatedData); err != nil || (updatedData.Role != "doctor" && updatedData.Role != "patient") {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid role. Allowed: 'doctor', 'patient'"})
+		return
+	}
+
+	_, err = userCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": bson.M{"role": updatedData.Role}})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error updating user role"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
 }
 
 func DeleteUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	isAdmin, exists := c.Get("isAdmin")
-	if !exists || !isAdmin.(bool) {
-		c.JSON(http.StatusForbidden, gin.H{"message": "Only the admin can delete users"})
+
+	isAdminInterface, exists := c.Get("isAdmin")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 		c.Abort()
 		return
 	}
 
-	userId := c.Param("userId")
-	objId, _ := primitive.ObjectIDFromHex(userId)
+	isAdmin, ok := isAdminInterface.(bool)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid admin status"})
+		c.Abort()
+		return
+	}
+	currentUserEmail, _ := c.Get("email")
 
-	result, err := userCollection.DeleteOne(ctx, bson.M{"_id": objId})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, responses.UserResponse{
-			Status:  http.StatusInternalServerError,
-			Message: "Error deleting user",
-		})
+	if !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Only admins can delete users"})
 		return
 	}
 
-	c.JSON(http.StatusOK, responses.UserResponse{
-		Status:  http.StatusOK,
-		Message: "User deleted successfully",
-		Data:    map[string]interface{}{"deletedCount": result.DeletedCount},
-	})
+	userId := c.Param("userId")
+	objId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
+		return
+	}
+
+	var user models.User
+	if err := userCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&user); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	if user.Email == currentUserEmail {
+		c.JSON(http.StatusForbidden, gin.H{"message": "You cannot delete your own account"})
+		return
+	}
+
+	result, err := userCollection.DeleteOne(ctx, bson.M{"_id": objId})
+	if err != nil || result.DeletedCount == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error deleting user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
