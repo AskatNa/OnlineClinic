@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Бронирование записи</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    form label {
+      margin: 10px 0 5px;
+      color: #555;
+    }
+
+    form input[type="text"],
+    form input[type="number"],
+    form input[type="hidden"] {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    form button {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    form button:hover {
+      background-color: #0056b3;
+    }
+
+    .response {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e0ffe0;
+      border: 1px solid #00b300;
+      border-radius: 4px;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Бронирование записи</h1>
+  <form id="bookForm">
+    <label for="doctorID">ID врача:</label>
+    <input type="text" id="doctorID" name="doctorID" placeholder="Введите ID врача" required>
+
+    <label for="patientID">ID пациента:</label>
+    <input type="text" id="patientID" name="patientID" placeholder="Введите ID пациента" required>
+
+    <label for="slotNo">Номер слота:</label>
+    <input type="number" id="slotNo" name="slotNo" placeholder="Введите номер слота" required>
+
+    <label for="duration">Длительность (мин):</label>
+    <input type="number" id="duration" name="duration" placeholder="Введите длительность" required>
+
+    <label for="appointmentDay">День приёма:</label>
+    <input type="text" id="appointmentDay" name="appointmentDay" placeholder="Например, Tuesday" required>
+
+    <input type="hidden" id="role" name="role" value="patient">
+
+    <button type="submit">Забронировать запись</button>
+  </form>
+  <div id="response" class="response" style="display:none;"></div>
+</div>
+<script >
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("bookForm");
+    const responseDiv = document.getElementById("response");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const doctorID = document.getElementById("doctorID").value.trim();
+      const patientID = document.getElementById("patientID").value.trim();
+      const slotNo = document.getElementById("slotNo").value.trim();
+      const duration = document.getElementById("duration").value.trim();
+      const appointmentDay = document.getElementById("appointmentDay").value.trim();
+      const role = document.getElementById("role").value.trim();
+      const requestData = {
+        role: role,
+        slotdata: {
+          DoctorID: doctorID,
+          PatientID: patientID,
+          SlotNo: slotNo,
+          Duration: duration,
+          AppointmentDay: appointmentDay
+        }
+      };
+
+      fetch("http://localhost:9000/appointments/book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestData)
+      })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error("Ошибка: " + response.status);
+                }
+                return response.json();
+              })
+              .then(data => {
+                responseDiv.style.display = "block";
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                responseDiv.style.display = "block";
+                responseDiv.textContent = "Ошибка: " + error.message;
+                console.error("Ошибка запроса:", error);
+              });
+    });
+  });
+</script>
+</body>
+</html>

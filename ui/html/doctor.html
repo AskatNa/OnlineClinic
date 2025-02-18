@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Информация о докторах</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #007BFF;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: block;
+      margin: 10px auto;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .result {
+      background-color: #e9ecef;
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Информация о докторах</h1>
+
+  <section id="allDoctorsSection">
+    <h2>Все доктора</h2>
+    <button id="loadAllDoctors">Загрузить всех докторов</button>
+    <pre id="allDoctorsResult" class="result"></pre>
+  </section>
+
+  <section id="searchDoctorSection">
+    <h2>Поиск доктора по имени</h2>
+    <input type="text" id="doctorNameInput" placeholder="Введите имя доктора">
+    <button id="searchDoctorButton">Найти доктора</button>
+    <pre id="doctorByNameResult" class="result"></pre>
+  </section>
+
+  <section id="doctorScheduleSection">
+    <h2>Расписание доктора</h2>
+    <input type="text" id="doctorIdInput" placeholder="Введите ID доктора">
+    <button id="loadScheduleButton">Показать расписание</button>
+    <pre id="doctorScheduleResult" class="result"></pre>
+  </section>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const loadAllDoctorsBtn = document.getElementById('loadAllDoctors');
+    const allDoctorsResult = document.getElementById('allDoctorsResult');
+
+    loadAllDoctorsBtn.addEventListener('click', function() {
+      fetch('http://localhost:9000/doctors')
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`Ошибка: ${response.status}`);
+                }
+                return response.json();
+              })
+              .then(data => {
+                allDoctorsResult.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                console.error('Ошибка загрузки докторов:', error);
+                allDoctorsResult.textContent = `Ошибка: ${error.message}`;
+              });
+    });
+
+    const searchDoctorBtn = document.getElementById('searchDoctorButton');
+    const doctorNameInput = document.getElementById('doctorNameInput');
+    const doctorByNameResult = document.getElementById('doctorByNameResult');
+
+    searchDoctorBtn.addEventListener('click', function() {
+      const doctorName = doctorNameInput.value.trim();
+      if (!doctorName) {
+        alert("Введите имя доктора");
+        return;
+      }
+      fetch(`http://localhost:9000/doctors/name/${encodeURIComponent(doctorName)}`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`Ошибка: ${response.status}`);
+                }
+                return response.json();
+              })
+              .then(data => {
+                doctorByNameResult.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                console.error('Ошибка поиска доктора:', error);
+                doctorByNameResult.textContent = `Ошибка: ${error.message}`;
+              });
+    });
+
+    const loadScheduleBtn = document.getElementById('loadScheduleButton');
+    const doctorIdInput = document.getElementById('doctorIdInput');
+    const doctorScheduleResult = document.getElementById('doctorScheduleResult');
+
+    loadScheduleBtn.addEventListener('click', function() {
+      const doctorId = doctorIdInput.value.trim();
+      if (!doctorId) {
+        alert("Введите ID доктора");
+        return;
+      }
+      fetch(`http://localhost:9000/doctors/schedule/${doctorId}`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`Ошибка: ${response.status}`);
+                }
+                return response.json();
+              })
+              .then(data => {
+                doctorScheduleResult.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                console.error('Ошибка загрузки расписания доктора:', error);
+                doctorScheduleResult.textContent = `Ошибка: ${error.message}`;
+              });
+    });
+  });
+
+</script>
+</body>
+</html>

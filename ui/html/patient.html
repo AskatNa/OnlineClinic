@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Пациенты</title>
+  <style>
+    /* Общие стили */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    section {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 20px;
+    }
+
+    section:last-child {
+      border-bottom: none;
+    }
+
+    button {
+      display: block;
+      width: 200px;
+      margin: 10px auto;
+      padding: 10px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .result {
+      background-color: #e9ecef;
+      border: 1px solid #ced4da;
+      padding: 10px;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Информация о пациентах</h1>
+  <section id="allPatientsSection">
+    <h2>Все пациенты</h2>
+    <button id="loadPatientsBtn">Загрузить всех пациентов</button>
+    <pre id="patientsResult" class="result"></pre>
+  </section>
+
+  <section id="patientByIdSection">
+    <h2>Поиск пациента по ID</h2>
+    <input type="text" id="patientIdInput" placeholder="Введите ID пациента">
+    <button id="searchPatientBtn">Найти пациента</button>
+    <pre id="patientResult" class="result"></pre>
+  </section>
+
+  <section id="appointmentHistorySection">
+    <h2>История записей пациента</h2>
+    <input type="text" id="historyPatientIdInput" placeholder="Введите ID пациента">
+    <button id="loadHistoryBtn">Загрузить историю записей</button>
+    <pre id="historyResult" class="result"></pre>
+  </section>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const loadPatientsBtn = document.getElementById("loadPatientsBtn");
+    const patientsResult = document.getElementById("patientsResult");
+
+    const searchPatientBtn = document.getElementById("searchPatientBtn");
+    const patientIdInput = document.getElementById("patientIdInput");
+    const patientResult = document.getElementById("patientResult");
+
+    const loadHistoryBtn = document.getElementById("loadHistoryBtn");
+    const historyPatientIdInput = document.getElementById("historyPatientIdInput");
+    const historyResult = document.getElementById("historyResult");
+
+    loadPatientsBtn.addEventListener("click", function() {
+      fetch("http://localhost:9000/patients")
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error("Ошибка: " + response.status);
+                }
+                return response.json();
+              })
+              .then(data => {
+                patientsResult.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                patientsResult.textContent = "Ошибка: " + error.message;
+                console.error("Ошибка загрузки пациентов:", error);
+              });
+    });
+
+    searchPatientBtn.addEventListener("click", function() {
+      const patientId = patientIdInput.value.trim();
+      if (!patientId) {
+        alert("Введите ID пациента");
+        return;
+      }
+      fetch(`http://localhost:9000/patients/${encodeURIComponent(patientId)}`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error("Ошибка: " + response.status);
+                }
+                return response.json();
+              })
+              .then(data => {
+                patientResult.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                patientResult.textContent = "Ошибка: " + error.message;
+                console.error("Ошибка поиска пациента:", error);
+              });
+    });
+
+    loadHistoryBtn.addEventListener("click", function() {
+      const patientId = historyPatientIdInput.value.trim();
+      if (!patientId) {
+        alert("Введите ID пациента");
+        return;
+      }
+      fetch(`http://localhost:9000/patients/${encodeURIComponent(patientId)}/appointments-history`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error("Ошибка: " + response.status);
+                }
+                return response.json();
+              })
+              .then(data => {
+                historyResult.textContent = JSON.stringify(data, null, 2);
+              })
+              .catch(error => {
+                historyResult.textContent = "Ошибка: " + error.message;
+                console.error("Ошибка загрузки истории записей:", error);
+              });
+    });
+  });
+
+</script>
+</body>
+</html>
