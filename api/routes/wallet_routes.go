@@ -22,7 +22,7 @@ func WalletRoutes(router *gin.Engine) {
 func RegisterPatientHandler(c *gin.Context) {
 	var patient models.User
 	if err := c.ShouldBindJSON(&patient); err != nil {
-		c.JSON(400, gin.H{"error": "Неверные данные"})
+		c.JSON(400, gin.H{"error": "Invalid information"})
 		return
 	}
 
@@ -32,13 +32,13 @@ func RegisterPatientHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Пациент зарегистрирован", "id": res.InsertedID})
+	c.JSON(200, gin.H{"message": "Patient registrated", "id": res.InsertedID})
 }
 
 func TopUpRequestHandler(c *gin.Context) {
 	var req controllers.TopUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "Неверные данные"})
+		c.JSON(400, gin.H{"error": "Invalid information"})
 		return
 	}
 
@@ -63,7 +63,7 @@ func ConfirmTopUpHandler(c *gin.Context) {
 
 	transactionID, err := primitive.ObjectIDFromHex(req.TransactionID)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Неверный ID транзакции"})
+		c.JSON(400, gin.H{"error": "Invalid ID transaction"})
 		return
 	}
 
@@ -73,13 +73,13 @@ func ConfirmTopUpHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Пополнение подтверждено"})
+	c.JSON(200, gin.H{"message": "Addition confirmed"})
 }
 
 func ChargePatientHandler(c *gin.Context) {
 	var req controllers.PaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "Неверные данные"})
+		c.JSON(400, gin.H{"error": "Invalid information"})
 		return
 	}
 
@@ -89,7 +89,7 @@ func ChargePatientHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Оплата успешна"})
+	c.JSON(200, gin.H{"message": "Succesfull payment"})
 }
 func WalletPageHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "wallets.html", nil)

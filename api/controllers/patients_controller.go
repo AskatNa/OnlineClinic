@@ -85,7 +85,7 @@ func getDPatientProfileByStringId(strPatientId string) bson.M {
 	query := bson.D{{Key: "_id", Value: patientId}}
 
 	var patientDoc bson.M
-	if err := UserCollection.FindOne(ctx, query).Decode(&patientDoc); err != nil {
+	if err := userCollection.FindOne(ctx, query).Decode(&patientDoc); err != nil {
 		fmt.Println("Error fetching patient:", err)
 		return bson.M{}
 	}

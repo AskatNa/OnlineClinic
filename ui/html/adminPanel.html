@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,35 +7,44 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f8f9fa;
             text-align: center;
+            margin: 0;
+            padding: 0;
         }
 
         .container {
-            width: 300px;
+            width: 350px;
             margin: 50px auto;
             padding: 20px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        input, button {
+        h2, h3 {
+            color: #343a40;
+        }
+
+        input, select, button {
             width: 100%;
             margin: 10px 0;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid #ced4da;
             border-radius: 5px;
+            font-size: 16px;
         }
 
         button {
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             cursor: pointer;
+            border: none;
+            transition: 0.3s;
         }
 
         button:hover {
-            background-color: #218838;
+            background-color: #0056b3;
         }
 
         ul {
@@ -45,10 +53,11 @@
         }
 
         li {
-            background: #e2e2e2;
+            background: #e9ecef;
             margin: 5px;
             padding: 10px;
             border-radius: 5px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -63,12 +72,29 @@
         <button type="submit">Create Doctor</button>
     </form>
 
+    <h3>Update User Role</h3>
+    <form id="updateUserRoleForm">
+        <input type="email" id="updateUserEmail" placeholder="User Email" required>
+        <select id="newUserRole">
+            <option value="patient">Patient</option>
+            <option value="doctor">Doctor</option>
+            <option value="admin">Admin</option>
+        </select>
+        <button type="submit">Update Role</button>
+    </form>
+
+    <h3>Delete User</h3>
+    <form id="deleteUserForm">
+        <input type="email" id="deleteUserEmail" placeholder="User Email" required>
+        <button type="submit">Delete User</button>
+    </form>
+
     <h3>All Users</h3>
     <button id="fetchUsersBtn">Fetch Users</button>
     <ul id="userList"></ul>
 </div>
 <script>
-    const fetchUsersBtn = document.getElementById('fetchUsersBtn')
+    const fetchUsersBtn = document.getElementById('fetchUsersBtn');
     fetchUsersBtn.addEventListener("click", async () => {
         const adminToken = localStorage.getItem("token");
 
@@ -84,8 +110,6 @@
                 "Authorization": `Bearer ${adminToken}`
             }
         });
-        console.log("Stored Token:", adminToken);
-
 
         if (!response.ok) {
             alert("Unauthorized! Please log in again.");
@@ -98,6 +122,45 @@
         console.log(data);
     });
 
+    document.getElementById("updateUserRoleForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("updateUserEmail").value;
+        const role = document.getElementById("newUserRole").value;
+        const adminToken = localStorage.getItem("token");
+
+        const response = await fetch("http://localhost:9000/admin/upgradeUser", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer ${adminToken}'
+            },
+            body: JSON.stringify({ email, role })
+        });
+
+        if (response.ok) {
+            alert("User role updated successfully");
+        } else {alert("Failed to update user role");
+        }
+    });
+
+    document.getElementById("deleteUserForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("deleteUserEmail").value;
+        const adminToken = localStorage.getItem("token");
+
+        const response = await fetch(`http://localhost:9000/admin/delete-user?email=${email}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${adminToken}`
+            }
+        });
+
+        if (response.ok) {
+            alert("User deleted successfully");
+        } else {
+            alert("Failed to delete user");
+        }
+    });
 </script>
 
 </body>

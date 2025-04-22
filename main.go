@@ -44,7 +44,6 @@ func main() {
 	// Передаём коллекции в контроллер
 	controllers.SetCollections(userCollection, walletCollection, transactionCollection)
 
-	// Настройка роутера
 	router := gin.Default()
 	configs.ConnectDB()
 	router.LoadHTMLGlob("ui/html/*.html")
@@ -53,8 +52,8 @@ func main() {
 		c.HTML(http.StatusOK, "wallets.html", nil)
 	})
 
-	// Регистрация маршрутов
-	routes.UnauthRoutes(router)
+	//routes.UnauthRoutes(router)
+	routes.SetupRoute(router)
 	routes.UserRoutes(router)
 	routes.DoctorRoutes(router)
 	routes.PatientRoutes(router)

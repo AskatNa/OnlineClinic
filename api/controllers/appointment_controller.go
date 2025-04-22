@@ -69,7 +69,7 @@ func BookAppointmentSlot(c *gin.Context) {
 	query := bson.D{{Key: "_id", Value: doctorObjId}}
 
 	var doctorDoc bson.M
-	if err := UserCollection.FindOne(ctx, query).Decode(&doctorDoc); err != nil {
+	if err := userCollection.FindOne(ctx, query).Decode(&doctorDoc); err != nil {
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
 			Status:  http.StatusInternalServerError,
 			Message: "Error finding doctor",
@@ -158,7 +158,7 @@ func CancelAppointmentSlot(c *gin.Context) {
 	query := bson.D{{Key: "_id", Value: doctorObjId}}
 
 	var doctorDoc bson.M
-	if err := UserCollection.FindOne(ctx, query).Decode(&doctorDoc); err != nil {
+	if err := userCollection.FindOne(ctx, query).Decode(&doctorDoc); err != nil {
 		fmt.Println("Error finding doctor:", err)
 		c.JSON(http.StatusInternalServerError, responses.UserResponse{
 			Status:  http.StatusInternalServerError,
@@ -244,7 +244,7 @@ func UpdateAppointmentSlot(doctorObjId primitive.ObjectID, doctorProfile primiti
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	updatedResult, err := UserCollection.UpdateOne(
+	updatedResult, err := userCollection.UpdateOne(
 		ctx,
 		bson.M{"_id": doctorObjId},
 		bson.D{{Key: "$set", Value: bson.D{{Key: "schedule", Value: newSchedule}}}},
@@ -338,7 +338,7 @@ func GetDoctorProfileByStringId(strDoctorId string) bson.M {
 	query := bson.D{{Key: "_id", Value: doctorId}}
 
 	var doctorDoc bson.M
-	if err := UserCollection.FindOne(ctx, query).Decode(&doctorDoc); err != nil {
+	if err := userCollection.FindOne(ctx, query).Decode(&doctorDoc); err != nil {
 		fmt.Println("Error finding doctor:", err)
 		return bson.M{}
 	}

@@ -8,18 +8,14 @@ import (
 
 	"github.com/AskatNa/OnlineClinic/api/models"
 	"github.com/AskatNa/OnlineClinic/api/responses"
-	"github.com/AskatNa/OnlineClinic/config/configs"
 	"github.com/gin-gonic/gin"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	userCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
-)
+//var userCollection *mongo.Collection
 
 func GetAllDoctors(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

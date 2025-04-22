@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Online Clinic</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", async function() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Please login first!");
+                window.location.href = "/login";
+                return;
+            }
+
+            const response = await fetch("/profile", {
+                method: "GET",
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById("user-email").textContent = data.email;
+            } else {
+                alert("Failed to load profile.");
+                window.location.href = "/login";
+            }
+        });
+    </script>
+</head>
+<body>
+<h2>Your Profile</h2>
+<p>Welcome, <span id="user-email"></span></p>
+</body>
+</html>
